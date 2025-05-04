@@ -39,14 +39,14 @@ func (img *JpegImage) CreateSimplified(clusters []domain.Pixel, path string) (st
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			r, g, b, a := img.image.At(x, y).RGBA()
-			newPic := domain.Pixel{uint8(r), uint8(g), uint8(b)}
+			newPic := domain.Pixel{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8)}
 			newPic = newPic.Predict(&clusters)
-			newCol := color.RGBA{newPic.R, newPic.G, newPic.B, uint8(a)}
+			newCol := color.RGBA{newPic.R, newPic.G, newPic.B, uint8(a >> 8)}
 			newImage.Set(x, y, newCol)
 		}
 	}
 
-	outFile, err := os.Create(path)
+	outFile, err := os.Create(path + ".jpeg")
 	if err != nil {
 		return "", err
 	}

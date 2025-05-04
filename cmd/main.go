@@ -16,12 +16,14 @@ func main() {
 	var clusters int
 	var palette bool
 	var simplified bool
+	var frameNum = -1
 	var batch int
 
-	pflag.IntVarP(&iterations, "iterations", "i", 50, "Number of iterations")
+	pflag.IntVarP(&iterations, "iterations", "i", 60, "Number of iterations")
 	pflag.IntVarP(&maxprocs, "maxprocs", "m", 8, "Number of goroutines")
-	pflag.IntVarP(&clusters, "clusters", "c", 30, "Number of clusters")
-	pflag.IntVarP(&batch, "batch", "b", 100, "Batch size")
+	pflag.IntVarP(&clusters, "clusters", "c", 20, "Number of clusters")
+	pflag.IntVarP(&batch, "batch", "b", 1000, "Batch size")
+	pflag.IntVarP(&frameNum, "frame", "", -1, "Number of frames that will be randomly chosen from gif file for clustering")
 	pflag.StringVarP(&filepath, "file", "f", "", "File to read from")
 	pflag.BoolVarP(&simplified, "simplified", "s", false, "Return simplified image or no")
 	pflag.BoolVarP(&palette, "palette", "p", false, "Return palette or no")
@@ -39,7 +41,8 @@ func main() {
 
 	runtime.GOMAXPROCS(maxprocs)
 
-	image, err := Images.NewImage(file.Name(), file)
+	input := Images.ImageConstructorData{File: file, FileName: file.Name(), FramesCount: frameNum}
+	image, err := Images.NewImage(input)
 
 	if err != nil {
 		fmt.Printf("Error decoding file: %v\n", err)
@@ -58,11 +61,24 @@ func main() {
 	clusteringObj.InitClusters()
 	clust := clusteringObj.DoClustering()
 
-	path, err := image.CreateSimplified(clust, "ret.jpeg")
+	if simplified == true {
+		path, err := image.CreateSimplified(clust, "ret")
 
-	if err != nil {
-		fmt.Printf("Error creating simplified image: %v\n", err)
-	} else {
-		fmt.Printf("Created simplified image: %s\n", path)
+		if err != nil {
+			fmt.Printf("Error creating simplified image: %v\n", err)
+		} else {
+			fmt.Printf("Created simplified image: %s\n", path)
+		}
 	}
+
+	if palette == true {
+		path, err := application.CreatePalette(clust, 200, 200, "ret-palette")
+
+		if err != nil {
+			fmt.Printf("Error creating palette of image: %v\n", err)
+		} else {
+			fmt.Printf("Created palette for image: %s\n", path)
+		}
+	}
+
 }
